@@ -1,0 +1,57 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&family=Nunito:wght@200;300;400;500;600;700;800;900&family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .navBar {
+    @apply shadow-blue-500/50 bg-blue-600 md:bg-blue-600/70  z-50 w-full fixed top-0 left-0 duration-300 ease-in-out;
+  }
+  .navBar.solid {
+    @apply bg-blue-600 transition-all duration-300 ease-in-out;
+  }
+
+  .logo {
+    @apply h-[5rem] p-0 mt-2 md:mt-0 duration-300 ease-in-out;
+  }
+  .logo.logo-small {
+    @apply md:h-[3.5rem] p-0 mt-2 md:mt-0 transition-all duration-300 ease-in-out;
+  }
+  .link {
+    @apply text-blue-100 hover:text-white duration-300 ease-in-out;
+  }
+  .link.dark {
+    @apply text-gray-100 hover:border-b-2 hover:border-gray-500 duration-300 ease-in;
+  }
+  .li-text {
+    @apply md:ml-6 text-lg md:my-0 my-7 uppercase font-semibold duration-300 ease-in-out;
+  }
+  .li-text.shrinked-text {
+    @apply md:ml-6 text-base md:my-0 my-7 uppercase font-semibold duration-300 ease-in-out;
+  }
+  .close-react-icon {
+    @apply cursor-pointer absolute right-8 top-8 md:hidden text-gray-100 font-bold text-4xl;
+  }
+  .fabars-react-icon {
+    @apply cursor-pointer absolute right-8 top-8 md:hidden text-gray-100 text-4xl;
+  }
+  .close-react-icon.close-dark {
+    @apply cursor-pointer absolute right-8 top-8 md:hidden text-gray-600 font-bold text-4xl;
+  }
+  .fabars-react-icon.fabars-dark {
+    @apply cursor-pointer absolute right-8 top-8 md:hidden text-gray-600 text-4xl;
+  }
+  .react-icons {
+    @apply text-3xl text-blue-500;
+  }
+
+  /* List Style Check Type */
+  .list-check-type {
+    list-style-position: inside;
+    list-style-image: url(/src/check.svg);
+    width: 0.5rem;
+    height: 0.5rem;
+    list-style-type: square;
+  }
+}
