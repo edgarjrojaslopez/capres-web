@@ -5,14 +5,16 @@ import Button from '../utils/Button';
 
 const Registro = () => {
   /* Initial Refs */
-  const emailRef = useRef(null);
+  const dataRefs[emailRef, nameRef, userNameRef, passwordRef, passwordConfirmRef] = useRef(null);
+  /* const emailRef = useRef(null);
   const userNameRef = useRef(null);
   const passwordRef = useRef(null);
-  const passwordConfirmRef = useRef(null);
+  const passwordConfirmRef = useRef(null); */
 
   /* On SignUp */
   const handleSignUp = () => {
     const registerData = {
+      name: nameRef.current.value,
       userName: userNameRef.current.value,
       email: emailRef.current.value,
       password: passwordRef.current.value,

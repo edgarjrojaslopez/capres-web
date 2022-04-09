@@ -1,6 +1,7 @@
 import { FaDollarSign, FaUser, FaUserFriends } from 'react-icons/fa';
 import { IconContext } from 'react-icons';
 import { GrServices } from 'react-icons/gr';
+import { BolivarIcon } from './BolivarIcon';
 
 export const Feature = () => {
   return (
@@ -46,17 +47,20 @@ export const Feature = () => {
               <FaUser />
             </IconContext.Provider>
           </div>
-          <h6 className="mb-2 font-semibold leading-5">The good cheese</h6>
+          <h6 className="mb-2 font-semibold leading-5">
+            Revisa tu estado de cuenta
+          </h6>
           <p className="max-w-md mb-3 text-sm text-gray-900 sm:mx-auto">
-            Cheese on toast airedale the big cheese. Danish fontina cheesy grin
-            airedale danish
+            El estado de cuenta te permite tener a la mano toda la información
+            acerca del saldo de tu disponibilidad para solicitar préstamos o
+            retiro de haberes.
           </p>
           <a
             href="/"
             aria-label=""
             className="inline-flex items-center font-semibold transition-colors duration-200 text-sky-400 hover:text-deep-purple-800"
           >
-            Learn more
+            Mas...
           </a>
         </div>
         <div className="sm:text-center">
@@ -81,7 +85,7 @@ export const Feature = () => {
         <div className="sm:text-center">
           <div className="flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-indigo-50 sm:mx-auto sm:w-24 sm:h-24">
             <IconContext.Provider value={{ className: 'react-icons' }}>
-              <FaDollarSign />
+              <BolivarIcon />
             </IconContext.Provider>
           </div>
           <h6 className="mb-2 font-semibold leading-5">Pick up truck</h6>

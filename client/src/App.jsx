@@ -5,8 +5,10 @@ import Home from './pages/Home';
 import About from './pages/About';
 import Socios from './pages/Socios';
 import AuthLayout from './utils/AuthLayout';
-import Login from './pages/Login';
-import Registro from './pages/Registro';
+import Login from './pages/LoginFormik';
+/* import Login from './pages/Login'; */
+/* import Registro from './pages/Registro'; */
+import Registro from './pages/RegistroFormik';
 import AcercaDe from './pages/AcercaDe';
 import Historia from './pages/Historia';
 import Junta from './pages/Junta';
@@ -25,6 +27,8 @@ import Dashboard from './pages/Dashboard';
 import ContentLayout from './utils/ContentLayout';
 import Signup from './components/signup/signup';
 import LoginNew from './pages/LoginNew';
+import UsersList from './pages/UsersList';
+import UserView from './pages/UserView';
 
 function App() {
   return (
@@ -50,6 +54,8 @@ function App() {
           <Route path="/contacto" element={<Contacto />} />
           <Route path="/prestamos_vehiculo" element={<PrestamosVehiculo />} />
           <Route path="/fondo_especial" element={<FondoEspecial />} />
+          <Route path="/users/list" element={<UsersList />} />
+          <Route path="/user/:id" element={<UserView />} />
         </Route>
         {/* <Route element={<DownloadsLayout />}></Route> */}
       </Route>
