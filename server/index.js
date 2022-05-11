@@ -1,6 +1,23 @@
 const express = require("express");
 const app = express();
+const cors = require("cors");
 
-app.get("/", (req, res) => {
-  res.send("Hello World!");
+app.use(express.json());
+app.use(cors());
+
+const db = require("./models");
+
+//Routes//
+//Profiles
+const profilesRouter = require("./routes/Profiles");
+app.use("/profiles", profilesRouter);
+
+//Usuarios
+const usuariosRouter = require("./routes/Usuarios");
+app.use("/usuarios", usuariosRouter);
+
+db.sequelize.sync().then(() => {
+  app.listen(3001, () => {
+    console.log("Server running on port 3001");
+  });
 });

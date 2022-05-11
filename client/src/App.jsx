@@ -29,6 +29,8 @@ import Signup from './components/signup/signup';
 import LoginNew from './pages/LoginNew';
 import UsersList from './pages/UsersList';
 import UserView from './pages/UserView';
+import Profiles from './pages/Profiles';
+import PerfilPage from './pages/PerfilPage';
 
 function App() {
   return (
@@ -56,6 +58,8 @@ function App() {
           <Route path="/fondo_especial" element={<FondoEspecial />} />
           <Route path="/users/list" element={<UsersList />} />
           <Route path="/user/:id" element={<UserView />} />
+          <Route path="/profiles" element={<Profiles />} />
+          <Route path="/profiles/demo" element={<PerfilPage />} />
         </Route>
         {/* <Route element={<DownloadsLayout />}></Route> */}
       </Route>
