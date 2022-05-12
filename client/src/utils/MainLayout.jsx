@@ -18,7 +18,6 @@ const MainLayout = () => {
         {/* main content */}
       </main>
       <div className="bottom-0 w-full">
-        {' '}
         <Footer />
       </div>
     </div>
