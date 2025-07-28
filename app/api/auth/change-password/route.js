@@ -1,5 +1,4 @@
 // app/api/auth/change-password/route.js
-'use client';
 export const runtime = 'nodejs';
 
 import { withErrorHandler } from '@/lib/api/handler';
