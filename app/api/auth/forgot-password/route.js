@@ -4,11 +4,11 @@ import { db } from '@/lib/db';
 import { socios } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import crypto from 'crypto';
-import { sendResetEmail } from '@/lib/email'; // Lo crearemos después
+import { sendResetEmail } from '@/lib/email';
 
 export async function POST(req) {
   try {
-    const { cedula } = await req.json();
+    const { cedula, email: correoIngresado } = await req.json();
 
     const [socio] = await db
       .select()
@@ -26,6 +26,44 @@ export async function POST(req) {
       );
     }
 
+    let emailFinal = socio.Email;
+
+    // Si no tiene correo y no se proporcionó uno
+    if (!emailFinal && !correoIngresado) {
+      return new Response(
+        JSON.stringify({
+          requiresEmail: true,
+          message:
+            'Este socio no tiene correo registrado. Por favor, ingrésalo para continuar.',
+        }),
+        { status: 200 }
+      );
+    }
+
+    // Si no tiene correo, pero el usuario lo ingresó
+    if (!emailFinal && correoIngresado) {
+      // Opción 1: Guardar temporalmente (para este flujo)
+      // Opción 2: Guardar permanentemente (recomendado)
+      emailFinal = correoIngresado;
+
+      // ✅ Opcional: Actualiza el correo en la base de datos
+      await db
+        .update(socios)
+        .set({ Email: correoIngresado })
+        .where(eq(socios.CodSocio, cedula));
+    }
+
+    // Validar formato del correo
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailFinal)) {
+      return new Response(
+        JSON.stringify({
+          error: 'El correo electrónico no tiene un formato válido.',
+        }),
+        { status: 400 }
+      );
+    }
+
     // Generar token único
     const token = crypto.randomBytes(32).toString('hex');
     const expires = new Date(Date.now() + 3600000); // 1 hora
@@ -40,7 +78,7 @@ export async function POST(req) {
       .where(eq(socios.CodSocio, cedula));
 
     // Enviar correo
-    await sendResetEmail(socio.Email, socio.NombreCompleto, token);
+    await sendResetEmail(emailFinal, socio.NombreCompleto, token);
 
     return new Response(
       JSON.stringify({
