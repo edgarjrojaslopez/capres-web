@@ -1,5 +1,4 @@
-// app/api/auth/login/route.js
-export const runtime = 'nodejs';
+export const runtime = 'nodejs'; // ✅ Obliga a usar Node.js
 
 import { db } from '@/lib/db';
 import { socios } from '@/lib/db/schema';
@@ -13,6 +12,15 @@ export async function POST(req) {
   try {
     const { cedula, password } = await req.json();
 
+    if (!cedula || !password) {
+      return new Response(
+        JSON.stringify({
+          error: { message: 'Cédula y contraseña requeridas' },
+        }),
+        { status: 400 }
+      );
+    }
+
     const [user] = await db
       .select()
       .from(socios)
@@ -25,9 +33,8 @@ export async function POST(req) {
       );
     }
 
-    // ✅ Verifica: si la contraseña es texto plano o hash
+    // ✅ Soporte para contraseñas en texto plano y hash
     let isValid = false;
-
     if (user.password.startsWith('$2b$')) {
       // Es un hash bcrypt
       isValid = await bcrypt.compare(password, user.password);
@@ -43,6 +50,7 @@ export async function POST(req) {
       );
     }
 
+    // ✅ Genera el token
     const token = jwt.sign(
       { cedula: user.CodSocio, nombre: user.NombreCompleto },
       JWT_SECRET,
@@ -57,7 +65,7 @@ export async function POST(req) {
       { status: 200 }
     );
   } catch (error) {
-    console.error('Error en login:', error);
+    console.error('Error en login:', error); // Aparecerá en los logs de Vercel
     return new Response(
       JSON.stringify({ error: { message: 'Error interno del servidor' } }),
       { status: 500 }
