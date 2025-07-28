@@ -550,6 +550,10 @@ video {
 .inset-0 {
   inset: 0px;
 }
+.inset-y-0 {
+  top: 0px;
+  bottom: 0px;
+}
 .bottom-0 {
   bottom: 0px;
 }
@@ -1185,6 +1189,12 @@ video {
 .pt-6 {
   padding-top: 1.5rem;
 }
+.pr-10 {
+  padding-right: 2.5rem;
+}
+.pr-3 {
+  padding-right: 0.75rem;
+}
 .text-left {
   text-align: left;
 }
@@ -1450,6 +1460,10 @@ video {
 .hover\:text-blue-800:hover {
   --tw-text-opacity: 1;
   color: rgb(30 64 175 / var(--tw-text-opacity, 1));
+}
+.hover\:text-gray-700:hover {
+  --tw-text-opacity: 1;
+  color: rgb(55 65 81 / var(--tw-text-opacity, 1));
 }
 .hover\:underline:hover {
   text-decoration-line: underline;
