@@ -3,6 +3,9 @@
 'use client'; // ✅ Esta línea debe estar AL INICIO del archivo
 import { useState, useSearchParams } from 'react';
 
+// ✅ Evita que esta página se prerenderice
+export const dynamic = 'force-client';
+
 export default function ResetPassword() {
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
