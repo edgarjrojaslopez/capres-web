@@ -1,8 +1,9 @@
-// components/ResetPasswordForm.jsx
+// app/reset-password/ResetPasswordForm.jsx
 
 'use client';
 
-import { useState, useSearchParams } from 'react';
+import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 export default function ResetPasswordForm() {
   const [password, setPassword] = useState('');
@@ -42,7 +43,7 @@ export default function ResetPasswordForm() {
       const data = await res.json();
 
       if (res.ok) {
-        setMessage('Contraseña actualizada con éxito. Redirigiendo...');
+        setMessage('Contraseña actualizada. Redirigiendo...');
         setTimeout(() => {
           window.location.href = '/login';
         }, 2000);
