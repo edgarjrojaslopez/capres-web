@@ -52,7 +52,9 @@ export default function ForgotPassword() {
       if (data.error) {
         setMessage(data.error);
       } else {
-        setMessage(data.message);
+        setMessage(
+          '¡Correo enviado! Revisa tu bandeja para restablecer tu contraseña.'
+        );
         setStep(1);
         setCedula('');
         setEmail('');
@@ -146,7 +148,9 @@ export default function ForgotPassword() {
       {message && (
         <p
           className={`mt-4 text-center text-sm ${
-            message.includes('Error') ? 'text-red-600' : 'text-green-600'
+            message.includes('Error') || message.includes('no válido')
+              ? 'text-red-600'
+              : 'text-green-600'
           }`}
         >
           {message}

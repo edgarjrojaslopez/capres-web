@@ -1,4 +1,4 @@
-export const runtime = 'nodejs'; // ✅ Obligatorio
+export const runtime = 'nodejs';
 
 import { db } from '@/lib/db';
 import { socios } from '@/lib/db/schema';
@@ -16,6 +16,7 @@ export async function POST(req) {
       .where(eq(socios.CodSocio, cedula));
 
     if (!socio) {
+      // No revelamos si el socio existe
       return new Response(
         JSON.stringify({
           success: true,
@@ -27,51 +28,54 @@ export async function POST(req) {
 
     let emailFinal = socio.Email;
 
+    // Caso 1: No tiene correo registrado
     if (!emailFinal && !correoIngresado) {
       return new Response(
         JSON.stringify({
           requiresEmail: true,
           message:
-            'Este socio no tiene correo registrado. Por favor, ingrésalo para continuar.',
+            'Este socio no tiene un correo registrado. Por favor, ingrésalo para continuar.',
         }),
         { status: 200 }
       );
     }
 
+    // Caso 2: No tiene correo, pero el usuario lo ingresó
     if (!emailFinal && correoIngresado) {
-      emailFinal = correoIngresado;
+      // Validar formato del correo
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(correoIngresado)) {
+        return new Response(
+          JSON.stringify({
+            error: 'El correo electrónico no tiene un formato válido.',
+          }),
+          { status: 400 }
+        );
+      }
+
+      // Guardar el correo en la base de datos
       await db
         .update(socios)
         .set({ Email: correoIngresado })
         .where(eq(socios.CodSocio, cedula));
+
+      emailFinal = correoIngresado;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(emailFinal)) {
-      return new Response(
-        JSON.stringify({
-          error: 'El correo electrónico no tiene un formato válido.',
-        }),
-        { status: 400 }
-      );
-    }
-
+    // Generar token de recuperación
     const token = crypto.randomBytes(32).toString('hex');
     const expires = new Date(Date.now() + 3600000); // 1 hora
 
-    // ✅ Asegúrate de que el objeto sea limpio
-    const updateData = {
-      reset_token: token,
-      reset_token_expires: expires,
-    };
+    // Guardar token en la base de datos
+    await db
+      .update(socios)
+      .set({
+        reset_token: token,
+        reset_token_expires: expires,
+      })
+      .where(eq(socios.CodSocio, cedula));
 
-    // ✅ Elimina campos undefined (por si acaso)
-    Object.keys(updateData).forEach(
-      (key) => updateData[key] === undefined && delete updateData[key]
-    );
-
-    await db.update(socios).set(updateData).where(eq(socios.CodSocio, cedula));
-
+    // Enviar correo
     await sendResetEmail(emailFinal, socio.NombreCompleto, token);
 
     return new Response(
@@ -88,8 +92,4 @@ export async function POST(req) {
       { status: 500 }
     );
   }
-  console.log('📧 Email final:', emailFinal);
-  console.log('🔐 Token:', token);
-  console.log('📅 Expira:', expires.toISOString());
-  console.log('📦 Datos a actualizar:', updateData);
 }
