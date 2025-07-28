@@ -1,11 +1,11 @@
 // app/reset-password/page.js
 
-'use client';
+'use client'; // ✅ Primera línea
 
 import { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation'; // ✅ Correcto
 
-// ✅ Evita que esta página se prerenderice
+// ✅ Evita prerrenderizado
 export const dynamic = 'force-client';
 
 export default function ResetPassword() {
@@ -46,7 +46,7 @@ export default function ResetPassword() {
       const data = await res.json();
 
       if (res.ok) {
-        setMessage('Contraseña actualizada con éxito. Redirigiendo...');
+        setMessage('Contraseña actualizada. Redirigiendo...');
         setTimeout(() => {
           window.location.href = '/login';
         }, 2000);
@@ -54,7 +54,7 @@ export default function ResetPassword() {
         setMessage(data.error || 'Token inválido o expirado');
       }
     } catch (error) {
-      setMessage('Error de conexión con el servidor.');
+      setMessage('Error de conexión');
     } finally {
       setLoading(false);
     }
@@ -65,7 +65,7 @@ export default function ResetPassword() {
       <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow text-center">
         <h2 className="text-xl font-semibold text-red-600">Token no válido</h2>
         <p className="mt-2 text-gray-600">
-          El enlace de recuperación no es válido o ha expirado.
+          El enlace no es válido o ha expirado.
         </p>
         <a
           href="/forgot-password"
