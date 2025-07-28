@@ -1,6 +1,6 @@
 // app/reset-password/page.js
 
-import ResetPasswordForm from '@components/ResetPasswordForm';
+import ResetPasswordForm from './ResetPasswordForm';
 import { Suspense } from 'react';
 
 // ✅ Evita prerrenderizado
