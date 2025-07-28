@@ -1,5 +1,4 @@
 {
-  "/api/dashboard/[codSocio]/route": "app/api/dashboard/[codSocio]/route.js",
   "/login/page": "app/login/page.js",
   "/dashboard/page": "app/dashboard/page.js"
 }
