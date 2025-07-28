@@ -1,12 +1,12 @@
 // app/reset-password/page.js
 
-'use client'; // ✅ Primera línea
+'use client'; // ✅ Marca el componente como del lado del cliente
 
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation'; // ✅ Correcto
 
-// ✅ Evita prerrenderizado
-export const dynamic = 'force-client';
+// ✅ Usa 'force-dynamic' para evitar prerrenderizado
+export const dynamic = 'force-dynamic';
 
 export default function ResetPassword() {
   const [password, setPassword] = useState('');
@@ -46,7 +46,7 @@ export default function ResetPassword() {
       const data = await res.json();
 
       if (res.ok) {
-        setMessage('Contraseña actualizada. Redirigiendo...');
+        setMessage('Contraseña actualizada con éxito. Redirigiendo...');
         setTimeout(() => {
           window.location.href = '/login';
         }, 2000);
@@ -54,7 +54,7 @@ export default function ResetPassword() {
         setMessage(data.error || 'Token inválido o expirado');
       }
     } catch (error) {
-      setMessage('Error de conexión');
+      setMessage('Error de conexión con el servidor.');
     } finally {
       setLoading(false);
     }
