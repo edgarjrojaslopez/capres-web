@@ -1,7 +1,6 @@
 // app/reset-password/page.js
 
 'use client'; // ✅ Esta línea debe estar AL INICIO del archivo
-
 import { useState, useSearchParams } from 'react';
 
 export default function ResetPassword() {
