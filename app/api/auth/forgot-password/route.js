@@ -1,4 +1,4 @@
-export const runtime = 'nodejs'; // ✅ Obligatorio para Date y bcrypt
+export const runtime = 'nodejs'; // ✅ Obligatorio
 
 import { db } from '@/lib/db';
 import { socios } from '@/lib/db/schema';
@@ -8,7 +8,7 @@ import { sendResetEmail } from '@/lib/email';
 
 export async function POST(req) {
   try {
-    const { cedula } = await req.json();
+    const { cedula, email: correoIngresado } = await req.json();
 
     const [socio] = await db
       .select()
@@ -25,26 +25,54 @@ export async function POST(req) {
       );
     }
 
-    // ✅ Generar token y expiración
+    let emailFinal = socio.Email;
+
+    if (!emailFinal && !correoIngresado) {
+      return new Response(
+        JSON.stringify({
+          requiresEmail: true,
+          message:
+            'Este socio no tiene correo registrado. Por favor, ingrésalo para continuar.',
+        }),
+        { status: 200 }
+      );
+    }
+
+    if (!emailFinal && correoIngresado) {
+      emailFinal = correoIngresado;
+      await db
+        .update(socios)
+        .set({ Email: correoIngresado })
+        .where(eq(socios.CodSocio, cedula));
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailFinal)) {
+      return new Response(
+        JSON.stringify({
+          error: 'El correo electrónico no tiene un formato válido.',
+        }),
+        { status: 400 }
+      );
+    }
+
     const token = crypto.randomBytes(32).toString('hex');
     const expires = new Date(Date.now() + 3600000); // 1 hora
 
-    // ✅ Asegúrate de que los valores sean válidos
+    // ✅ Asegúrate de que el objeto sea limpio
     const updateData = {
       reset_token: token,
       reset_token_expires: expires,
     };
 
-    // ✅ Elimina cualquier campo undefined (por si acaso)
+    // ✅ Elimina campos undefined (por si acaso)
     Object.keys(updateData).forEach(
       (key) => updateData[key] === undefined && delete updateData[key]
     );
 
-    // ✅ Ejecutar actualización
     await db.update(socios).set(updateData).where(eq(socios.CodSocio, cedula));
 
-    // ✅ Enviar correo
-    await sendResetEmail(socio.Email, socio.NombreCompleto, token);
+    await sendResetEmail(emailFinal, socio.NombreCompleto, token);
 
     return new Response(
       JSON.stringify({
@@ -60,4 +88,8 @@ export async function POST(req) {
       { status: 500 }
     );
   }
+  console.log('📧 Email final:', emailFinal);
+  console.log('🔐 Token:', token);
+  console.log('📅 Expira:', expires.toISOString());
+  console.log('📦 Datos a actualizar:', updateData);
 }
