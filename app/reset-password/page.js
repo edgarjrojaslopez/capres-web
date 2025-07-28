@@ -1,13 +1,16 @@
 // app/reset-password/page.js
 
-'use client'; // ✅ Esta línea debe estar AL INICIO del archivo
-import { useState, useSearchParams } from 'react';
+'use client';
+
+import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 // ✅ Evita que esta página se prerenderice
 export const dynamic = 'force-client';
 
 export default function ResetPassword() {
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -16,8 +19,20 @@ export default function ResetPassword() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setMessage('');
+    setLoading(true);
+
+    if (password !== confirmPassword) {
+      setMessage('Las contraseñas no coinciden');
+      setLoading(false);
+      return;
+    }
+
+    if (password.length < 6) {
+      setMessage('La contraseña debe tener al menos 6 caracteres');
+      setLoading(false);
+      return;
+    }
 
     try {
       const res = await fetch('/api/auth/reset-password', {
@@ -29,7 +44,15 @@ export default function ResetPassword() {
       });
 
       const data = await res.json();
-      setMessage(data.message || data.error);
+
+      if (res.ok) {
+        setMessage('Contraseña actualizada con éxito. Redirigiendo...');
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
+      } else {
+        setMessage(data.error || 'Token inválido o expirado');
+      }
     } catch (error) {
       setMessage('Error de conexión con el servidor.');
     } finally {
@@ -39,18 +62,31 @@ export default function ResetPassword() {
 
   if (!token) {
     return (
-      <p className="text-center text-red-600">Token no válido o faltante.</p>
+      <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow text-center">
+        <h2 className="text-xl font-semibold text-red-600">Token no válido</h2>
+        <p className="mt-2 text-gray-600">
+          El enlace de recuperación no es válido o ha expirado.
+        </p>
+        <a
+          href="/forgot-password"
+          className="text-blue-600 hover:underline mt-4 inline-block"
+        >
+          Solicitar nuevo enlace
+        </a>
+      </div>
     );
   }
 
   return (
     <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow">
-      <h2 className="text-2xl font-bold mb-4">Restablecer Contraseña</h2>
+      <h2 className="text-2xl font-bold mb-4 text-center">
+        🔐 Restablecer Contraseña
+      </h2>
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
           <label
             htmlFor="password"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-gray-700 mb-1"
           >
             Nueva Contraseña
           </label>
@@ -65,6 +101,22 @@ export default function ResetPassword() {
             minLength="6"
           />
         </div>
+        <div className="mb-6">
+          <label
+            htmlFor="confirm"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Confirmar Contraseña
+          </label>
+          <input
+            type="password"
+            id="confirm"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            required
+          />
+        </div>
         <button
           type="submit"
           disabled={loading}
@@ -76,9 +128,7 @@ export default function ResetPassword() {
       {message && (
         <p
           className={`mt-4 text-center text-sm ${
-            message.includes('error') || message.includes('Token')
-              ? 'text-red-600'
-              : 'text-green-600'
+            message.includes('éxito') ? 'text-green-600' : 'text-red-600'
           }`}
         >
           {message}
