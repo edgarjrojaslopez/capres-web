@@ -16,22 +16,39 @@ const getToken = () => {
   return cookieToken || localStorage.getItem('token');
 };
 
-export default function DashboardContent() {
-  const [userData, setUserData] = useState(null);
-  const [haberesData, setHaberesData] = useState(null);
-  const [prestamosData, setPrestamosData] = useState([]);
-  const [loading, setLoading] = useState(true);
+export default function DashboardContent({
+  userData,
+  haberesData,
+  prestamosData,
+  codSocio,
+  token,
+}) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
+  const [showLoanModal, setShowLoanModal] = useState(false);
+  const [showLoanFormModal, setShowLoanFormModal] = useState(false);
+  const [selectedLoanType, setSelectedLoanType] = useState('');
+  const [loanForm, setLoanForm] = useState({
+    amount: '',
+    reason: '',
+  });
   const [avatar, setAvatar] = useState('/avatar-default.png');
   const [changePasswordModal, setChangePasswordModal] = useState(false);
-
-  const token = getToken();
-  const decodedToken = token ? JSON.parse(atob(token.split('.')[1])) : null;
-  const codSocio = decodedToken?.cedula || null;
+  const [userDataState, setUserData] = useState(userData);
 
   console.log('🔍 DashboardContent - Token:', token ? 'Presente' : 'Ausente');
   console.log('🔍 DashboardContent - codSocio:', codSocio);
+  console.log('🔍 DashboardContent - userData:', userData);
+
+  if (!userData || !codSocio) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-lg text-red-600">
+          Error: No se pudieron cargar los datos del usuario
+        </div>
+      </div>
+    );
+  }
 
   // Formatear fechas
   const formatDate = (dateString) => {
@@ -53,55 +70,28 @@ export default function DashboardContent() {
     }).format(value || 0);
   };
 
-  // Cargar datos
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!codSocio) {
-        console.log('❌ No codSocio disponible');
-        setLoading(false);
-        return;
-      }
-
-      try {
-        console.log('📡 Fetching data para codSocio:', codSocio);
-        const response = await fetch(`/api/dashboard/${codSocio}`);
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log('✅ Data recibida:', data);
-
-        setUserData(data.socio);
-        setHaberesData(data.haberes);
-        setPrestamosData(data.prestamos || []);
-      } catch (error) {
-        console.error('❌ Error fetching dashboard data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [codSocio]);
-
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSave = async () => {
     try {
+      // Solo enviar los campos que el socio puede editar
+      const allowedFields = {
+        Telefonos: form.Telefonos,
+        Email: form.Email,
+      };
+
       const res = await fetch(`/api/socios/${codSocio}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify(allowedFields),
       });
 
       if (res.ok) {
-        setUserData({ ...userData, ...form });
+        setUserData({ ...userData, ...allowedFields });
         setEditing(false);
         alert('Datos actualizados correctamente');
       } else {
@@ -121,23 +111,63 @@ export default function DashboardContent() {
     reader.readAsDataURL(file);
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-lg">Cargando dashboard...</div>
-      </div>
-    );
-  }
+  const handleEdit = () => {
+    // Inicializar el formulario con los datos actuales del usuario
+    setForm({
+      Telefonos: userData.Telefonos || '',
+      Email: userData.Email || '',
+    });
+    setEditing(true);
+  };
 
-  if (!userData) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-lg text-red-600">
-          Error: No se pudieron cargar los datos del usuario
-        </div>
-      </div>
-    );
-  }
+  const handleLoanTypeSelect = (loanType) => {
+    setSelectedLoanType(loanType);
+    setShowLoanModal(false);
+    setShowLoanFormModal(true);
+  };
+
+  const handleLoanSubmit = async () => {
+    if (!loanForm.amount || !loanForm.reason) {
+      alert('Por favor completa todos los campos');
+      return;
+    }
+
+    try {
+      const emailData = {
+        to: 'testmail@capres.com.ve',
+        subject: `Solicitud de ${selectedLoanType.name} - ${userData.Nombres} ${userData.Apellidos}`,
+        body: `
+          SOLICITUD DE PRÉSTAMO
+
+          Datos del Solicitante:
+          - Nombre: ${userData.Nombres} ${userData.Apellidos}
+          - Cédula: ${userData.CodSocio}
+          - Email: ${userData.Email}
+          - Teléfono: ${userData.Telefonos}
+
+          Detalles del Préstamo:
+          - Tipo: ${selectedLoanType.name}
+          - Monto Solicitado: Bs. ${Number(loanForm.amount).toLocaleString()}
+          - Razón: ${loanForm.reason}
+
+          Fecha de Solicitud: ${new Date().toLocaleDateString()}
+        `,
+      };
+
+      console.log('Email a enviar:', emailData);
+
+      alert(
+        'Solicitud enviada correctamente. Recibirás una respuesta en los próximos días hábiles.'
+      );
+
+      setLoanForm({ amount: '', reason: '' });
+      setShowLoanFormModal(false);
+      setSelectedLoanType('');
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error al enviar la solicitud. Inténtalo nuevamente.');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 px-4 py-8">
@@ -188,6 +218,13 @@ export default function DashboardContent() {
               icon="💰"
               color="from-blue-500 to-blue-600"
               description="Tu acumulado total"
+            />
+            <DashboardCard
+              title="Disponible para Retiro/Préstamo"
+              value={formatNumber(haberesData?.totalH * 0.8)}
+              icon="💳"
+              color="from-emerald-500 to-emerald-600"
+              description="80% de tus haberes totales"
             />
             <DashboardCard
               title="Último Retiro"
@@ -289,7 +326,7 @@ export default function DashboardContent() {
             />
           </div>
           <button
-            onClick={() => setEditing(true)}
+            onClick={handleEdit}
             className="mt-6 py-3 px-8 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg"
           >
             ✏️ Editar Datos
@@ -366,23 +403,50 @@ export default function DashboardContent() {
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
-              <h4 className="text-xl font-medium">
+              <h4 className="text-xl font-medium mb-4">
                 No tienes préstamos activos
               </h4>
-              <p className="mt-2">
-                Consulta con tu delegado si puedes solicitar uno.
+              <p className="mb-6">
+                ¿Necesitas un préstamo? Solicítalo fácilmente desde aquí.
               </p>
+              <button
+                onClick={() => setShowLoanModal(true)}
+                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg"
+              >
+                💰 Solicitar Préstamo
+              </button>
             </div>
           )}
         </section>
 
-        {/* Modal de edición */}
+        {/* Modales */}
         {editing && (
           <EditModal
             form={form}
             setForm={setForm}
             onSave={handleSave}
             onCancel={() => setEditing(false)}
+          />
+        )}
+
+        {showLoanModal && (
+          <LoanTypeModal
+            onClose={() => setShowLoanModal(false)}
+            onSelectType={handleLoanTypeSelect}
+          />
+        )}
+
+        {showLoanFormModal && (
+          <LoanFormModal
+            loanType={selectedLoanType}
+            form={loanForm}
+            setForm={setLoanForm}
+            onSubmit={handleLoanSubmit}
+            onClose={() => {
+              setShowLoanFormModal(false);
+              setSelectedLoanType('');
+              setLoanForm({ amount: '', reason: '' });
+            }}
           />
         )}
 
@@ -438,12 +502,6 @@ function EditModal({ form, setForm, onSave, onCancel }) {
           ✏️ Editar Datos
         </h3>
         <div className="space-y-5">
-          <InputField
-            label="Cuenta Bancaria"
-            name="NroCtaBanco"
-            value={form.NroCtaBanco}
-            onChange={setForm}
-          />
           <InputField
             label="Teléfono"
             name="Telefonos"
@@ -622,6 +680,145 @@ function ChangePasswordModal({ onClose, onSuccess }) {
             </div>
           </form>
         )}
+      </div>
+    </div>
+  );
+}
+
+// Modal de tipos de préstamo
+function LoanTypeModal({ onClose, onSelectType }) {
+  const loanTypes = [
+    {
+      id: 'short',
+      name: 'Préstamo a Corto Plazo',
+      description: 'Hasta 12 meses - 2% mensual',
+      maxAmount: 'Bs. 5.000.000',
+      icon: '⚡',
+    },
+    {
+      id: 'medium',
+      name: 'Préstamo a Mediano Plazo',
+      description: 'Hasta 36 meses - 1.8% mensual',
+      maxAmount: 'Bs. 15.000.000',
+      icon: '📈',
+    },
+    {
+      id: 'long',
+      name: 'Préstamo a Largo Plazo',
+      description: 'Hasta 60 meses - 1.5% mensual',
+      maxAmount: 'Bs. 30.000.000',
+      icon: '🏦',
+    },
+    {
+      id: 'special',
+      name: 'Préstamo Especial',
+      description: 'Educativo, médico o familiar',
+      maxAmount: 'Hasta Bs. 20.000.000',
+      icon: '⭐',
+    },
+  ];
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-7">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-2xl font-bold text-gray-800">
+            💰 Tipos de Préstamo
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 text-2xl"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="grid gap-4">
+          {loanTypes.map((type) => (
+            <button
+              key={type.id}
+              onClick={() => onSelectType(type)}
+              className="text-left p-4 border border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all"
+            >
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">{type.icon}</span>
+                <div>
+                  <h4 className="font-semibold text-gray-800">{type.name}</h4>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {type.description}
+                  </p>
+                  <p className="text-sm font-medium text-blue-600 mt-1">
+                    Monto máximo: {type.maxAmount}
+                  </p>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Modal de formulario de préstamo
+function LoanFormModal({ loanType, form, setForm, onSubmit, onClose }) {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-7">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-2xl font-bold text-gray-800">
+            {loanType.icon} {loanType.name}
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 text-2xl"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Monto Solicitado (Bs.)
+            </label>
+            <input
+              type="number"
+              value={form.amount}
+              onChange={(e) => setForm({ ...form, amount: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Ingresa el monto"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Razón del Préstamo
+            </label>
+            <textarea
+              value={form.reason}
+              onChange={(e) => setForm({ ...form, reason: e.target.value })}
+              rows={4}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Describe el motivo del préstamo"
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-4 mt-8">
+          <button
+            onClick={onClose}
+            className="px-6 py-2.5 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onSubmit}
+            className="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition"
+          >
+            Enviar Solicitud
+          </button>
+        </div>
       </div>
     </div>
   );

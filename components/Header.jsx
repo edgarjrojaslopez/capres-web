@@ -82,11 +82,12 @@ export default function Header() {
             className="flex items-center space-x-4 hover:opacity-90 transition-opacity"
             onClick={() => setMobileMenuOpen(false)}
           >
-            <div className="relative w-12 h-12 md:w-16 md:h-16 bg-white p-1">
+            <div className="relative w-14 h-14 md:w-16 md:h-16 bg-white p-1">
               <Image
                 src="/assets/images/capres.jpg"
                 alt="Logo CAPRES"
                 fill
+                sizes="(max-width: 768px) 48px, 64px"
                 className="object-contain"
                 priority
               />
