@@ -1,6 +1,118 @@
+'use client';
+import { useEffect, useRef, useState } from 'react';
+
 // components/ContactPage.jsx
 // Contact Page Component
 export default function ContactPage() {
+  const mapRef = useRef(null);
+  const [formData, setFormData] = useState({
+    nombre: '',
+    email: '',
+    asunto: '',
+    mensaje: '',
+  });
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+
+  const handleInputChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage('');
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setMessage('¡Mensaje enviado exitosamente! Te responderemos pronto.');
+        setFormData({ nombre: '', email: '', asunto: '', mensaje: '' });
+      } else {
+        setMessage(data.error || 'Error al enviar el mensaje');
+      }
+    } catch (error) {
+      setMessage('Error de conexión. Intenta nuevamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Cargar Leaflet dinámicamente
+    const loadLeaflet = async () => {
+      if (typeof window === 'undefined') return;
+
+      // Cargar CSS de Leaflet
+      if (!document.querySelector('link[href*="leaflet"]')) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        document.head.appendChild(link);
+      }
+
+      // Cargar JS de Leaflet
+      if (!window.L) {
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        script.onload = initMap;
+        document.head.appendChild(script);
+      } else {
+        initMap();
+      }
+    };
+
+    const initMap = () => {
+      if (!mapRef.current || !window.L) return;
+
+      // Coordenadas exactas de CAPRES
+      const capresLocation = [10.497717, -66.8850067];
+
+      const map = window.L.map(mapRef.current).setView(capresLocation, 17);
+
+      // Agregar tiles de OpenStreetMap
+      window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+      }).addTo(map);
+
+      // Agregar marcador con popup
+      const marker = window.L.marker(capresLocation).addTo(map);
+
+      marker
+        .bindPopup(
+          `
+        <div style="text-align: center; padding: 8px; min-width: 200px;">
+          <h3 style="margin: 0 0 8px 0; color: #1e40af; font-weight: bold; font-size: 16px;">CAPRES</h3>
+          <p style="margin: 0 0 6px 0; font-size: 14px; font-weight: 500;">Caja de Ahorros SENIAT</p>
+          <p style="margin: 0 0 6px 0; font-size: 12px; color: #666; line-height: 1.4;">
+            Plaza Venezuela, Avenida Quito<br>
+            Caracas 1052, Distrito Capital<br>
+            Venezuela
+          </p>
+          <p style="margin: 0; font-size: 12px; color: #1e40af; font-weight: 500;">
+            📞 +58 0212-7092111
+          </p>
+        </div>
+      `
+        )
+        .openPopup();
+    };
+
+    loadLeaflet();
+  }, []);
+
   return (
     <div>
       <h2 className="text-3xl font-bold mb-6">Contáctanos</h2>
@@ -34,8 +146,9 @@ export default function ContactPage() {
               <div>
                 <h4 className="font-semibold">Dirección</h4>
                 <p>
-                  Avenida Principal de Caracas, Edificio CAPRES, Piso 5<br />
-                  Caracas, Venezuela
+                  Plaza Venezuela, Avenida Quito, <br />
+                  Caracas 1052, Distrito Capital,
+                  <br /> Venezuela
                 </p>
               </div>
             </div>
@@ -56,7 +169,7 @@ export default function ContactPage() {
               </svg>
               <div>
                 <h4 className="font-semibold">Teléfono</h4>
-                <p>+58 212-1234567</p>
+                <p>+58 0212-7092111</p>
               </div>
             </div>
 
@@ -76,7 +189,7 @@ export default function ContactPage() {
               </svg>
               <div>
                 <h4 className="font-semibold">Correo Electrónico</h4>
-                <p>info@capres.gob.ve</p>
+                <p>contactanos@capres.com.ve</p>
               </div>
             </div>
           </div>
@@ -84,9 +197,7 @@ export default function ContactPage() {
           <div className="bg-white p-6 rounded-lg shadow">
             <h3 className="text-xl font-semibold mb-4">Horario de Atención</h3>
             <ul className="space-y-2 text-gray-600">
-              <li>Lunes a Viernes: 8:00 AM - 4:00 PM</li>
-              <li>Sábados: 9:00 AM - 12:00 PM</li>
-              <li>Domingos: Cerrado</li>
+              <li>Lunes a Viernes: 8:00 AM - 3:00 PM</li>
             </ul>
           </div>
         </div>
@@ -94,15 +205,20 @@ export default function ContactPage() {
         <div>
           <h3 className="text-2xl font-semibold mb-4">Ubicación</h3>
           <div className="bg-white rounded-lg shadow overflow-hidden h-80 mb-6">
-            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-              <p className="text-gray-500">Mapa interactivo irá aquí</p>
-            </div>
+            <div
+              ref={mapRef}
+              className="w-full h-full"
+              style={{ minHeight: '320px' }}
+            />
           </div>
 
           <h3 className="text-2xl font-semibold mb-4">
             Formulario de Contacto
           </h3>
-          <form className="bg-white p-6 rounded-lg shadow">
+          <form
+            className="bg-white p-6 rounded-lg shadow"
+            onSubmit={handleSubmit}
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -110,6 +226,10 @@ export default function ContactPage() {
                 </label>
                 <input
                   type="text"
+                  name="nombre"
+                  value={formData.nombre}
+                  onChange={handleInputChange}
+                  required
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -119,6 +239,10 @@ export default function ContactPage() {
                 </label>
                 <input
                   type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -129,6 +253,10 @@ export default function ContactPage() {
               </label>
               <input
                 type="text"
+                name="asunto"
+                value={formData.asunto}
+                onChange={handleInputChange}
+                required
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -138,14 +266,32 @@ export default function ContactPage() {
               </label>
               <textarea
                 rows="4"
+                name="mensaje"
+                value={formData.mensaje}
+                onChange={handleInputChange}
+                required
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              ></textarea>
+              />
             </div>
+
+            {message && (
+              <div
+                className={`mb-4 p-3 rounded ${
+                  message.includes('exitosamente')
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-red-100 text-red-700'
+                }`}
+              >
+                {message}
+              </div>
+            )}
+
             <button
               type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              disabled={loading}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-blue-300 transition-colors"
             >
-              Enviar Mensaje
+              {loading ? 'Enviando...' : 'Enviar Mensaje'}
             </button>
           </form>
         </div>

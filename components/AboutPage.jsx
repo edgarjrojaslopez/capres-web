@@ -8,10 +8,13 @@ export default function AboutPage() {
       <section className="mb-12">
         <h3 className="text-2xl font-semibold mb-4">Historia de CAPRES</h3>
         <p className="mb-4">
-          CAPRES fue creada en 1985 con el objetivo de proveer un sistema de
-          ahorro y préstamo seguro y accesible para los empleados del SENIAT. A
-          lo largo de estos años, hemos crecido y evolucionado para adaptarnos a
-          las necesidades cambiantes de nuestros asociados.
+          El día 22 de Junio de 1995, 53 funcionarios adscritos al Servicio
+          Nacional Integrado de Administración Tributaria (SENIAT) se reunieron
+          a objeto de constituir lo que es hoy “La Caja de Ahorro y Previsión de
+          los Empleados del Servicio Nacional Integrado de Administración
+          Aduanera y Tributaria SENIAT – CAPRES”; teniendo por objeto principal
+          establecer y fomentar el ahorro sistemático y en general procurar para
+          sus asociados toda clase de beneficios socioeconómicos.
         </p>
         <p className="mb-4">
           Nuestra trayectoria ha estado marcada por el compromiso con la
@@ -19,7 +22,7 @@ export default function AboutPage() {
           nuestros socios.
         </p>
         <p>
-          Actualmente contamos con más de 10,000 socios activos y ofrecemos una
+          Actualmente contamos con más de 4,500 socios activos y ofrecemos una
           amplia gama de productos y servicios financieros diseñados
           específicamente para el colectivo SENIAT.
         </p>

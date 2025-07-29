@@ -2,6 +2,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function LoginForm() {
   const [cedula, setCedula] = useState('');
@@ -9,11 +10,12 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false); // ← Controla si se muestra la contraseña
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+    setLoading(true);
 
     try {
       const res = await fetch('/api/auth/login', {
@@ -31,12 +33,15 @@ export default function LoginForm() {
         return;
       }
 
-      // Guardar en localStorage
+      // Guardar token en cookie y localStorage
+      document.cookie = `token=${data.token}; path=/; max-age=${
+        7 * 24 * 60 * 60
+      }; secure; samesite=strict`;
       localStorage.setItem('token', data.token);
       localStorage.setItem('userData', JSON.stringify(data.user));
 
-      // Redirigir al dashboard
-      window.location.href = '/dashboard';
+      // ✅ Usar router de Next.js en lugar de window.location
+      router.push('/dashboard');
     } catch (err) {
       setError('Error de conexión con el servidor.');
     } finally {

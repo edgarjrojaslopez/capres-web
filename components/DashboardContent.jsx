@@ -3,6 +3,19 @@
 
 import { useEffect, useState } from 'react';
 
+// Función para obtener token de cookie o localStorage
+const getToken = () => {
+  if (typeof window === 'undefined') return null;
+
+  // Intentar obtener de cookie primero
+  const cookieToken = document.cookie
+    .split('; ')
+    .find((row) => row.startsWith('token='))
+    ?.split('=')[1];
+
+  return cookieToken || localStorage.getItem('token');
+};
+
 export default function DashboardContent() {
   const [userData, setUserData] = useState(null);
   const [haberesData, setHaberesData] = useState(null);
@@ -13,10 +26,12 @@ export default function DashboardContent() {
   const [avatar, setAvatar] = useState('/avatar-default.png');
   const [changePasswordModal, setChangePasswordModal] = useState(false);
 
-  const token =
-    typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const token = getToken();
   const decodedToken = token ? JSON.parse(atob(token.split('.')[1])) : null;
   const codSocio = decodedToken?.cedula || null;
+
+  console.log('🔍 DashboardContent - Token:', token ? 'Presente' : 'Ausente');
+  console.log('🔍 DashboardContent - codSocio:', codSocio);
 
   // Formatear fechas
   const formatDate = (dateString) => {
@@ -41,36 +56,35 @@ export default function DashboardContent() {
   // Cargar datos
   useEffect(() => {
     const fetchData = async () => {
-      if (!codSocio) return;
+      if (!codSocio) {
+        console.log('❌ No codSocio disponible');
+        setLoading(false);
+        return;
+      }
 
       try {
-        const res = await fetch(`/api/dashboard/${codSocio}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        console.log('📡 Fetching data para codSocio:', codSocio);
+        const response = await fetch(`/api/dashboard/${codSocio}`);
 
-        if (!res.ok) throw new Error('Error al cargar datos');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-        const data = await res.json();
+        const data = await response.json();
+        console.log('✅ Data recibida:', data);
+
         setUserData(data.socio);
         setHaberesData(data.haberes);
-        setPrestamosData(Array.isArray(data.prestamos) ? data.prestamos : []);
-
-        setForm({
-          NroCtaBanco: data.socio.NroCtaBanco || '',
-          Telefonos: data.socio.Telefonos || '',
-          Email: data.socio.Email || '',
-        });
-
-        if (data.socio.avatarUrl) setAvatar(data.socio.avatarUrl);
-      } catch (err) {
-        console.error('Error al cargar datos:', err);
+        setPrestamosData(data.prestamos || []);
+      } catch (error) {
+        console.error('❌ Error fetching dashboard data:', error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [codSocio, token]);
+  }, [codSocio]);
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -109,47 +123,18 @@ export default function DashboardContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-8">
-        <div className="max-w-7xl mx-auto space-y-8">
-          {/* Skeleton Header */}
-          <div className="bg-white rounded-2xl shadow-xl p-8 flex flex-col lg:flex-row gap-8 animate-pulse">
-            <div className="flex flex-col items-center">
-              <div className="w-24 h-24 rounded-full bg-gray-300 mb-4"></div>
-              <div className="h-6 w-48 bg-gray-300 rounded mb-2"></div>
-              <div className="h-4 w-32 bg-gray-300 rounded"></div>
-            </div>
-            <div className="flex-1 space-y-4">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-24 bg-gray-300 rounded-xl"></div>
-              ))}
-            </div>
-          </div>
-
-          {/* Skeleton Full Width */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 space-y-4 animate-pulse">
-            <div className="h-6 w-48 bg-gray-300 rounded"></div>
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-4 bg-gray-300 rounded w-3/4"></div>
-            ))}
-            <div className="h-10 w-32 bg-gray-300 rounded"></div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-lg p-6 animate-pulse">
-            <div className="h-6 w-48 bg-gray-300 rounded mb-5"></div>
-            <div className="h-20 bg-gray-300 rounded-xl"></div>
-          </div>
-        </div>
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-lg">Cargando dashboard...</div>
       </div>
     );
   }
 
   if (!userData) {
     return (
-      <div className="text-center py-16">
-        <h2 className="text-2xl font-semibold text-gray-700">
-          No se encontró información del socio
-        </h2>
-        <p className="text-gray-500 mt-2">Intenta iniciar sesión nuevamente.</p>
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-lg text-red-600">
+          Error: No se pudieron cargar los datos del usuario
+        </div>
       </div>
     );
   }
@@ -512,6 +497,24 @@ function InputField({ label, name, value, onChange, type = 'text' }) {
   );
 }
 
+// Campo de entrada simple para el modal de contraseña
+function SimpleInputField({ label, name, value, onChange, type = 'text' }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+        {label}
+      </label>
+      <input
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none focus:border-transparent transition"
+      />
+    </div>
+  );
+}
+
 // Modal de cambio de contraseña
 function ChangePasswordModal({ onClose, onSuccess }) {
   const [current, setCurrent] = useState('');
@@ -536,7 +539,7 @@ function ChangePasswordModal({ onClose, onSuccess }) {
     }
 
     try {
-      const token = localStorage.getItem('token');
+      const token = getToken();
       const res = await fetch('/api/auth/change-password', {
         method: 'POST',
         headers: {
@@ -581,21 +584,21 @@ function ChangePasswordModal({ onClose, onSuccess }) {
                 {error}
               </div>
             )}
-            <InputField
+            <SimpleInputField
               label="Contraseña Actual"
               name="current"
               value={current}
               onChange={(e) => setCurrent(e.target.value)}
               type="password"
             />
-            <InputField
+            <SimpleInputField
               label="Nueva Contraseña"
               name="new"
               value={newPass}
               onChange={(e) => setNewPass(e.target.value)}
               type="password"
             />
-            <InputField
+            <SimpleInputField
               label="Confirmar Contraseña"
               name="confirm"
               value={confirm}

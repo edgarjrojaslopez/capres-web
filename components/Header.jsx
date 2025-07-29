@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Header() {
   const router = useRouter();
@@ -45,10 +46,10 @@ export default function Header() {
     <header className="bg-blue-800 text-white shadow-md">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         {/* Logo */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3">
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden text-white focus:outline-none"
+            className="md:hidden text-white focus:outline-none mr-2"
             aria-label="Menú"
           >
             <svg
@@ -59,7 +60,6 @@ export default function Header() {
               stroke="currentColor"
             >
               {mobileMenuOpen ? (
-                // X (cerrar)
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -67,7 +67,6 @@ export default function Header() {
                   d="M6 18L18 6M6 6l12 12"
                 />
               ) : (
-                // Líneas (menú)
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -77,12 +76,29 @@ export default function Header() {
               )}
             </svg>
           </button>
+
           <Link
             href="/"
-            className="text-xl font-bold"
+            className="flex items-center space-x-4 hover:opacity-90 transition-opacity"
             onClick={() => setMobileMenuOpen(false)}
           >
-            CAPRES
+            <div className="relative w-12 h-12 md:w-16 md:h-16 bg-white p-1">
+              <Image
+                src="/assets/images/capres.jpg"
+                alt="Logo CAPRES"
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl md:text-2xl font-bold leading-tight">
+                CAPRES
+              </span>
+              <span className="text-xs md:text-sm opacity-90 hidden sm:block">
+                Caja de Ahorros SENIAT
+              </span>
+            </div>
           </Link>
         </div>
 
