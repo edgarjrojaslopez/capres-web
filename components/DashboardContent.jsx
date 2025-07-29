@@ -133,36 +133,61 @@ export default function DashboardContent({
     }
 
     try {
-      const emailData = {
-        to: 'testmail@capres.com.ve',
-        subject: `Solicitud de ${selectedLoanType.name} - ${userData.Nombres} ${userData.Apellidos}`,
-        body: `
-          SOLICITUD DE PRÉSTAMO
+      // Debug: verificar los datos del usuario
+      console.log('🔍 userData completo:', userData);
+      console.log('🔍 Nombres:', userData.Nombres);
+      console.log('🔍 Apellidos:', userData.Apellidos);
 
-          Datos del Solicitante:
-          - Nombre: ${userData.Nombres} ${userData.Apellidos}
-          - Cédula: ${userData.CodSocio}
-          - Email: ${userData.Email}
-          - Teléfono: ${userData.Telefonos}
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          to: 'testmail@capres.com.ve',
+          subject: `Solicitud de ${selectedLoanType.name} - ${
+            userData.NombreCompleto || userData.CodSocio
+          }`,
+          html: `
+            <h2>SOLICITUD DE PRÉSTAMO</h2>
 
-          Detalles del Préstamo:
-          - Tipo: ${selectedLoanType.name}
-          - Monto Solicitado: Bs. ${Number(loanForm.amount).toLocaleString()}
-          - Razón: ${loanForm.reason}
+            <h3>Datos del Solicitante:</h3>
+            <ul>
+              <li><strong>Nombre:</strong> ${
+                userData.NombreCompleto || 'N/A'
+              }</li>
+              <li><strong>Cédula:</strong> ${userData.CodSocio || 'N/A'}</li>
+              <li><strong>Email:</strong> ${userData.Email || 'N/A'}</li>
+              <li><strong>Teléfono:</strong> ${userData.Telefonos || 'N/A'}</li>
+            </ul>
 
-          Fecha de Solicitud: ${new Date().toLocaleDateString()}
-        `,
-      };
+            <h3>Detalles del Préstamo:</h3>
+            <ul>
+              <li><strong>Tipo:</strong> ${selectedLoanType.name}</li>
+              <li><strong>Monto Solicitado:</strong> Bs. ${Number(
+                loanForm.amount
+              ).toLocaleString()}</li>
+              <li><strong>Razón:</strong> ${loanForm.reason}</li>
+            </ul>
 
-      console.log('Email a enviar:', emailData);
+            <p><strong>Fecha de Solicitud:</strong> ${new Date().toLocaleDateString()}</p>
+          `,
+        }),
+      });
 
-      alert(
-        'Solicitud enviada correctamente. Recibirás una respuesta en los próximos días hábiles.'
-      );
+      const data = await response.json();
 
-      setLoanForm({ amount: '', reason: '' });
-      setShowLoanFormModal(false);
-      setSelectedLoanType('');
+      if (response.ok) {
+        alert(
+          'Solicitud enviada correctamente. Recibirás una respuesta en los próximos días hábiles.'
+        );
+        setLoanForm({ amount: '', reason: '' });
+        setShowLoanFormModal(false);
+        setSelectedLoanType('');
+      } else {
+        throw new Error(data.error || 'Error al enviar el correo');
+      }
     } catch (error) {
       console.error('Error:', error);
       alert('Error al enviar la solicitud. Inténtalo nuevamente.');

@@ -20,6 +20,16 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/dashboard/[codSocio]/route.js"
+    ],
+    "/api/send-email/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/send-email/route.js"
+    ],
+    "/api/socios/[codSocio]/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/socios/[codSocio]/route.js"
     ]
   }
 }
